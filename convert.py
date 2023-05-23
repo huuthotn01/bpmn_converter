@@ -1,5 +1,5 @@
 from xml.dom import minidom
-from identifier import identifier
+from builder import builder
 import sys
 
 # SPECIFIC STRUCTURE GENERATOR
@@ -113,29 +113,7 @@ def gen_strucuture_template(structure_name: str) -> str:
     # init sequence tag
     sequenceTag = root.createElement("sequence")
     sequenceTag.setAttribute("name", "main")
-    ## gen receive tag
-    receiveTag = gen_receive_tag(root, structure_name)
-    sequenceTag.appendChild(receiveTag)
-    ## gen main content tag here
-    match structure_name:
-        case "if":
-            contentTag = gen_if_structure()
-        case "flow":
-            contentTag = gen_flow_structure()
-        case "pick":
-            contentTag = gen_pick_structure()
-        case "repeatUntil":
-            contentTag = gen_repeatUntil_structure()
-        case "repeatWhile":
-            contentTag = gen_repeatWhile_structure()
-        case "sequence":
-            contentTag = gen_sequence_structure()
-        case "while":
-            contentTag = gen_while_structure()
-    sequenceTag.appendChild(contentTag)
-    ## gen reply tag
-    replyTag = gen_reply_tag(root, structure_name)
-    sequenceTag.appendChild(replyTag)
+    
     ## append to process tag
     processTag.appendChild(sequenceTag)
 
@@ -143,8 +121,5 @@ def gen_strucuture_template(structure_name: str) -> str:
 
 if __name__ == '__main__':
     filepath = sys.argv[1]
-    structure_name = identifier(filepath)
-    if structure_name == "":
-        print("Need human manipulation")
-    else:
-        gen_strucuture_template(structure_name)
+    output_file = builder(filepath)
+    print("Output file name", output_file)
