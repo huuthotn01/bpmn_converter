@@ -33,17 +33,26 @@ def map_id_to_next_element(inp: minidom.Element) -> tuple[dict(), dict(), str]:
         mapIdToContent[tag.getAttribute("id")] = tag
         mapIdToNextElements[tag.getAttribute("id")] = list()
     currentTag = mapIdToContent[startEventId].getAttribute("id")
-    recursive_map_id_to_next_element(currentTag, mapIdToContent, mapIdToNextElements)
+    recursive_map_id_to_next_element(currentTag, mapIdToContent, mapIdToNextElements, [])
     return (mapIdToNextElements, mapIdToContent, startEventId)
 
-def recursive_map_id_to_next_element(currentTag: str, mapIdToContent: dict(), mapIdToNextElements: dict()):
+def recursive_map_id_to_next_element(currentTag: str, mapIdToContent: dict(), mapIdToNextElements: dict(), visited: list()):
     if mapIdToContent[currentTag].tagName == "endEvent": return # terminate when meeting end event
+    if currentTag in visited: return
 
     currTag = mapIdToContent[currentTag]
     outgoingTags = currTag.getElementsByTagName("outgoing")
     for outTag in outgoingTags:
         outId = get_text(outTag.childNodes)
         targetRef = mapIdToContent[outId].getAttribute("targetRef")
-        if currTag.tagName in ["parallelGateway", "eventBasedGateway"] and currTag.getAttribute("gatewayDirection") == "Converging": mapIdToNextElements[currentTag] = [targetRef]
+        if currTag.tagName in ["parallelGateway", "eventBasedGateway", "exclusiveGateway"] and currTag.getAttribute("gatewayDirection") == "Converging":
+            mapIdToNextElements[currentTag] = [targetRef]
         else: mapIdToNextElements[currentTag] += [targetRef]
-        recursive_map_id_to_next_element(targetRef, mapIdToContent, mapIdToNextElements)
+        recursive_map_id_to_next_element(targetRef, mapIdToContent, mapIdToNextElements, visited + [currentTag])
+
+def find_gate_pairs(inp: minidom.Element) -> dict():
+    """
+        Input: BPMN tags
+        Output: map between open gate and corresponding close gate.
+    """
+    mapOpenToCloseGate = dict()
