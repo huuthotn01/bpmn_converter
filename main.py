@@ -1,30 +1,7 @@
 from xml.dom import minidom
 from builder import builder
 import sys
-
-# SPECIFIC STRUCTURE GENERATOR
-def gen_flow_structure(root: minidom.Document) -> minidom.Element:
-    pass
-
-def gen_if_structure(root: minidom.Document) -> minidom.Element:
-    ifTag = root.createElement("if")
-    ifTag.setAttribute("name", "If1")
-
-
-def gen_pick_structure(root: minidom.Document) -> minidom.Element:
-    pass
-
-def gen_repeatUntil_structure(root: minidom.Document) -> minidom.Element:
-    pass
-
-def gen_repeatWhile_structure(root: minidom.Document) -> minidom.Element:
-    pass
-
-def gen_sequence_structure(root: minidom.Document) -> minidom.Element:
-    pass
-
-def gen_while_structure(root: minidom.Document) -> minidom.Element:
-    pass
+import os
 
 # COMMON TAGS GENERATOR
 def gen_process_tag(root: minidom.Document, structure_name: str) -> minidom.Element:
@@ -88,7 +65,7 @@ def gen_reply_tag(root: minidom.Document, structure_name: str) -> minidom.Elemen
     return replyTag
 
 # MAIN GENERATOR
-def gen_strucuture_template(structure_name: str) -> str:
+def main_gen(structure_name: str, file_path: str) -> str:
     if structure_name not in ['flow', 'if', 'pick', 'repeatUntil', 'repeatWhile', 'sequence', 'while']:
         raise Exception('structure name is not a well-structured')
     
@@ -113,13 +90,24 @@ def gen_strucuture_template(structure_name: str) -> str:
     # init sequence tag
     sequenceTag = root.createElement("sequence")
     sequenceTag.setAttribute("name", "main")
+    builder(file_path, root, sequenceTag)
     
     ## append to process tag
     processTag.appendChild(sequenceTag)
 
-    return root.toprettyxml(indent="\t")
+    ## write to result file
+    if not os.path.exists("./result"):
+        os.mkdir("./result")
+    filename = file_path.split("/")[-1]
+    filename = filename.split(".")[0]
+    resultFile = "./result/" + filename + ".bpel"
+    f = open(resultFile, "w", encoding="utf-8")
+    f.write(processTag.toprettyxml(indent="\t"))
+    f.close()
+
+    return resultFile
 
 if __name__ == '__main__':
     filepath = sys.argv[1]
-    output_file = builder(filepath)
+    output_file = main_gen("sequence", filepath)
     print("Output file name", output_file)
